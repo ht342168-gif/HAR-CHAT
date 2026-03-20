@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bankvala AI Chatbot - Loan Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .chatbot-wrapper {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            height: 650px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .messages-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        .bot .message-bubble {
+            background: white;
+            border: 1px solid #ddd;
+            color: #333;
+            border-radius: 12px 12px 12px 0;
+        }
+
+        .user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 12px;
+        }
+
+        .loading {
+            display: flex;
+            gap: 5px;
+            padding: 12px 16px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: pulse 1.4s infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { opacity: 0.3; }
+            40% { opacity: 1; }
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .input-section {
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .form-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loan-info {
+            background: #f0f2ff;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            .chatbot-wrapper {
+                height: 100vh;
+                max-width: 100%;
+                border-radius: 0;
+            }
+            
+            .message-bubble {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbot-wrapper">
+        <!-- Header -->
+        <div class="chat-header">
+            <h1>💰 Bankvala AI Chatbot</h1>
+            <p>Your instant loan recommendation assistant</p>
+        </div>
+
+        <!-- Messages -->
+        <div class="messages-box" id="messagesBox">
+            <div class="message bot">
+                <div class="message-bubble">
+                    👋 Hello! I'm your Bankvala AI Assistant. I'll help you find the perfect loan in just 2 minutes. Which loan are you interested in?
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="userInput" class="input-field" placeholder="Type or select an option...">
+                <button class="send-btn" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================================
+        // CONFIGURATION - UPDATE THIS
+        // ===================================
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyDZR_UcbJEUJYCs5KwfxgdgyGzVEpGKfLG-dcDYKmkLKmczyKN7dhGcLUM7eBul5eT/exec";
+
+        // ===================================
+        // STATE MANAGEMENT
+        // ===================================
+        let conversationState = 'initial';
+        let userProfile = {
+            loanType: '',
+            monthlyIncome: '',
+            employmentType: '',
+            loanAmount: '',
+            name: '',
+            phone: '',
+            email: ''
+        };
+
+        // ===================================
+        // LOAN DATA
+        // ===================================
+        const loanData = {
+            'Personal Loan': {
+                description: 'Perfect for emergencies, education, travel, or any personal need',
+                minAmount: '₹50,000',
+                maxAmount: '₹25,00,000',
+                rate: '9% - 16% p.a.',
+                tenure: '12 - 60 months'
+            },
+            'Home Loan': {
+                description: 'Turn your dream home into reality with affordable financing',
+                minAmount: '₹5,00,000',
+                maxAmount: '₹3,00,00,000',
+                rate: '6.5% - 9.5% p.a.',
+                tenure: '5 - 30 years'
+            },
+            'Business Loan': {
+                description: 'Fuel your business growth with flexible financing options',
+                minAmount: '₹1,00,000',
+                maxAmount: '₹1,00,00,000',
+                rate: '10% - 18% p.a.',
+                tenure: '12 - 84 months'
+            },
+            'Car Loan': {
+                description: 'Drive your dream car with easy approval and quick disbursal',
+                minAmount: '₹2,00,000',
+                maxAmount: '₹30,00,000',
+                rate: '7% - 14% p.a.',
+                tenure: '12 - 84 months'
+            },
+            'Gold Loan': {
+                description: 'Quick cash against your gold at competitive rates',
+                minAmount: '₹10,000',
+                maxAmount: '₹50,00,000',
+                rate: '8% - 13% p.a.',
+                tenure: '6 - 36 months'
+            },
+            'Credit Card': {
+                description: 'Get a credit card for convenience and rewards',
+                minAmount: '₹5,000 limit',
+                maxAmount: '₹5,00,000 limit',
+                rate: '2.5% - 4% monthly',
+                tenure: 'Revolving'
+            }
+        };
+
+        // ===================================
+        // UI FUNCTIONS
+        // ===================================
+        function displayMessage(text, sender = 'bot', isHTML = false) {
+            const messagesBox = document.getElementById('messagesBox');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+
+            if (isHTML) {
+                bubble.innerHTML = text;
+            } else {
+                bubble.textContent = text;
+            }
+
+            messageDiv.appendChild(bubble);
+            messagesBox.appendChild(messageDiv);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        function displayLoading() {
+            const messagesBox = document.getElementById('messagesBox');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.id = 'loadingMessage';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'loading';
+            bubble.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+
+            messageDiv.appendChild(bubble);
+            messagesBox.appendChild(messageDiv);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        function removeLoading() {
+            const loading = document.getElementById('loadingMessage');
+            if (loading) loading.remove();
+        }
+
+        function displayButtons(buttons, onClickFunction) {
+            const messagesBox = document.getElementById('messagesBox');
+            const buttonDiv = document.createElement('div');
+            buttonDiv.className = 'message bot';
+
+            const buttonGroup = document.createElement('div');
+            buttonGroup.className = 'button-group';
+
+            buttons.forEach(button => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.textContent = button;
+                btn.onclick = () => onClickFunction(button);
+                buttonGroup.appendChild(btn);
+            });
+
+            buttonDiv.appendChild(buttonGroup);
+            messagesBox.appendChild(buttonDiv);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        // ===================================
+        // CONVERSATION FLOW
+        // ===================================
+        function startConversation() {
+            conversationState = 'initial';
+            const loanTypes = Object.keys(loanData);
+            displayButtons(loanTypes, selectLoanType);
+        }
+
+        function selectLoanType(loanType) {
+            displayMessage(loanType, 'user');
+            userProfile.loanType = loanType;
+
+            setTimeout(() => {
+                displayLoading();
+                setTimeout(() => {
+                    removeLoading();
+                    const loan = loanData[loanType];
+                    displayMessage(`Great! 📊 You selected ${loanType}.\n\n${loan.description}\n\nNow, what's your monthly income?`);
+                    conversationState = 'income';
+                    displayButtons(['₹25K - ₹50K', '₹50K - ₹1L', '₹1L - ₹3L', '₹3L+'], selectIncome);
+                }, 800);
+            }, 300);
+        }
+
+        function selectIncome(income) {
+            displayMessage(income, 'user');
+            userProfile.monthlyIncome = income;
+
+            setTimeout(() => {
+                displayLoading();
+                setTimeout(() => {
+                    removeLoading();
+                    displayMessage('Perfect! 💼 Now, what\'s your employment type?');
+                    conversationState = 'employment';
+                    displayButtons(['Salaried', 'Self-Employed', 'Business Owner', 'Freelancer'], selectEmployment);
+                }, 800);
+            }, 300);
+        }
+
+        function selectEmployment(employment) {
+            displayMessage(employment, 'user');
+            userProfile.employmentType = employment;
+
+            setTimeout(() => {
+                displayLoading();
+                setTimeout(() => {
+                    removeLoading();
+                    displayMessage('Excellent! 💰 How much loan amount do you need?');
+                    conversationState = 'amount';
+                    displayButtons(['₹1,00,000', '₹3,00,000', '₹5,00,000', '₹10,00,000+'], selectAmount);
+                }, 800);
+            }, 300);
+        }
+
+        function selectAmount(amount) {
+            displayMessage(amount, 'user');
+            userProfile.loanAmount = amount;
+
+            setTimeout(() => {
+                displayLoading();
+                setTimeout(() => {
+                    removeLoading();
+                    showRecommendation();
+                }, 800);
+            }, 300);
+        }
+
+        function showRecommendation() {
+            const loan = loanData[userProfile.loanType];
+            const loanHTML = `
+                <strong>${userProfile.loanType}</strong><br>
+                <div class="loan-info">
+                    💰 Amount: ${loan.minAmount} - ${loan.maxAmount}<br>
+                    📊 Rate: ${loan.rate}<br>
+                    ⏰ Tenure: ${loan.tenure}
+                </div>
+            `;
+
+            displayMessage('🎯 Here\'s your perfect match:', 'bot');
+            displayMessage(loanHTML, 'bot', true);
+
+            setTimeout(() => {
+                displayMessage('📞 To proceed, please share your details and I\'ll book your free consultation!', 'bot');
+                showContactForm();
+            }, 500);
+        }
+
+        function showContactForm() {
+            const messagesBox = document.getElementById('messagesBox');
+            const formDiv = document.createElement('div');
+            formDiv.className = 'message bot';
+
+            const formHTML = `
+                <div class="form-card">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="nameInput" placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phoneInput" placeholder="10-digit number">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="emailInput" placeholder="your@email.com">
+                    </div>
+                    <button class="submit-btn" onclick="submitForm()">✓ Book Free Consultation</button>
+                </div>
+            `;
+
+            formDiv.innerHTML = formHTML;
+            messagesBox.appendChild(formDiv);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        async function submitForm() {
+            const name = document.getElementById('nameInput').value.trim();
+            const phone = document.getElementById('phoneInput').value.trim();
+            const email = document.getElementById('emailInput').value.trim();
+
+            if (!name || !phone || !email) {
+                alert('❌ Please fill all fields!');
+                return;
+            }
+
+            userProfile.name = name;
+            userProfile.phone = phone;
+            userProfile.email = email;
+
+            const submitBtn = event.target;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Saving...';
+
+            try {
+                // Send data to Google Sheets
+                const response = await fetch(GOOGLE_SHEET_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userProfile)
+                });
+
+                console.log('Data sent to Google Sheets:', userProfile);
+
+                // Hide form
+                const formCard = document.querySelector('.form-card');
+                formCard.style.display = 'none';
+
+                displayMessage('✓ Details saved', 'user');
+
+                setTimeout(() => {
+                    displayLoading();
+                    setTimeout(() => {
+                        removeLoading();
+                        displayMessage(`🎉 Perfect ${name}! Your consultation is booked!\n\n✓ Expert will call on ${phone} within 2 hours\n✓ WhatsApp: +91-74898 49992\n\nThank you for choosing Bankvala! 🙏`, 'bot');
+                        conversationState = 'completed';
+                    }, 1000);
+                }, 500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                displayMessage('✓ Details saved', 'user');
+                setTimeout(() => {
+                    displayMessage(`🎉 Perfect ${name}! Your consultation is booked!\n\n✓ Expert will call on ${phone} within 2 hours\n✓ WhatsApp: +91-74898 49992`, 'bot');
+                }, 500);
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = '✓ Book Free Consultation';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            displayMessage(message, 'user');
+            input.value = '';
+
+            if (conversationState === 'completed') {
+                setTimeout(() => {
+                    displayLoading();
+                    setTimeout(() => {
+                        removeLoading();
+                        displayMessage('Would you like to apply for another loan?', 'bot');
+                        displayButtons(['Yes, apply again', 'No, thank you'], (response) => {
+                            displayMessage(response, 'user');
+                            if (response.includes('Yes')) {
+                                userProfile = { loanType: '', monthlyIncome: '', employmentType: '', loanAmount: '', name: '', phone: '', email: '' };
+                                startConversation();
+                            } else {
+                                displayMessage('Thank you for using Bankvala! 🙏', 'bot');
+                            }
+                        });
+                    }, 800);
+                }, 300);
+            } else {
+                setTimeout(() => {
+                    displayLoading();
+                    setTimeout(() => {
+                        removeLoading();
+                        displayMessage('Thanks for your input! Would you like to continue with the loan consultation?', 'bot');
+                    }, 800);
+                }, 300);
+            }
+        }
+
+        // ===================================
+        // INIT
+        // ===================================
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Start chatbot
+        startConversation();
+    </script>
+</body>
+</html>
